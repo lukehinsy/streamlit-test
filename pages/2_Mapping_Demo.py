@@ -16,7 +16,7 @@ from urllib.error import URLError
 
 import pandas as pd
 import pydeck as pdk
-import geopandas as gpd
+# import geopandas as gpd
 import pandas as pd
 from census import Census
 from us import states
@@ -30,8 +30,7 @@ from streamlit.hello.utils import show_code
 
 
 def mapping_demo():
-    pip install geopandas
-    
+
     c = Census(userdata.get('CensusAPIKey'))
     stAbbrevs=[]
     for x in states.STATES:
@@ -57,8 +56,7 @@ def mapping_demo():
         tractmaps = pygris.counties(state = x.fips, cb = True, cache = True)
         geom_df=pd.concat([geom_df, tractmaps[['GEOID','NAME','NAMELSAD','STUSPS','geometry']]])
 
-    geom_gpd = gpd.GeoDataFrame(geom_df, geometry='geometry')
-    geom_json = json.loads(geom_gpd.rename(columns={"GEOID": "fips"}).to_json())
+    geom_json = json.loads(geom_df.rename(columns={"GEOID": "fips"}).to_json())
     df['fips']=df.state+df.county
     fig = px.choropleth(df[['fips','NAME','MedianHHValue']], geojson=geom_json, locations='fips', color='MedianHHValue',
                            color_continuous_scale="Viridis",
