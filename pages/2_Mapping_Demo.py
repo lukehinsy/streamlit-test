@@ -30,7 +30,8 @@ from streamlit.hello.utils import show_code
 
 
 def mapping_demo():
-
+    pip install geopandas
+    
     c = Census(userdata.get('CensusAPIKey'))
     stAbbrevs=[]
     for x in states.STATES:
