@@ -1,6 +1,7 @@
 altair
 numpy
 pandas
+geopandas
 pydeck
 streamlit
 plotly
