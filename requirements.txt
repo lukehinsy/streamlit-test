@@ -3,3 +3,9 @@ numpy
 pandas
 pydeck
 streamlit
+plotly
+matplotlib.pyplot
+census
+us
+json
+pygris
