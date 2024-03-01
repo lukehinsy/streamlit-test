@@ -18,7 +18,7 @@ import pandas as pd
 import pydeck as pdk
 # import geopandas as gpd
 import pandas as pd
-from census import Census
+import census.Census
 from us import states
 import os
 import plotly.express as px
