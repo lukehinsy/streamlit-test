@@ -38,11 +38,11 @@ def mapping_demo():
     
     df = pd.DataFrame(columns=('NAME',	'C17002_001E',	'C17002_002E',	'C17002_003E',	'B01003_001E','B25077_001E', 'B25097_001E',	'state',	'county'))
     for x in states.STATES:
-    results = c.acs5.state_county(fields = ('NAME', 'C17002_001E', 'C17002_002E', 'C17002_003E', 'B01003_001E','B25077_001E', 'B25097_001E'),
+        results = c.acs5.state_county(fields = ('NAME', 'C17002_001E', 'C17002_002E', 'C17002_003E', 'B01003_001E','B25077_001E', 'B25097_001E'),
                                       state_fips = x.fips,
                                       county_fips = "*",
                                       year = 2020)
-    df=pd.concat([df, pd.DataFrame(results)])
+        df=pd.concat([df, pd.DataFrame(results)])
     df.rename(columns = {'B25077_001E': 'MedianHHValue','B01003_001E':'TotalPop'}, inplace=True)
     df['poverty_rate'] = (df.C17002_002E + df.C17002_003E) / df.B01003_001E
     df.drop(['C17002_001E','C17002_002E','C17002_003E'], axis=1, inplace=True)
