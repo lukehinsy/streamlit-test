@@ -1,11 +1,11 @@
 altair
+census
 numpy
 pandas
 pydeck
 streamlit
 plotly
 matplotlib
-census
 us
 json
 pygris
