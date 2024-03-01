@@ -1,7 +1,6 @@
 altair
 numpy
 pandas
-geopandas
 pydeck
 streamlit
 plotly
@@ -10,3 +9,9 @@ census
 us
 json
 pygris
+numpy
+shapely
+fiona
+six
+pyproj
+geopandas
