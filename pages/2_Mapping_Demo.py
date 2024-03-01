@@ -30,9 +30,7 @@ from streamlit.hello.utils import show_code
 
 
 def mapping_demo():
-    # StateAbbr=st.text_input('What state do you want to map?')
 
-    @st.cache_data
     c = Census(userdata.get('CensusAPIKey'))
     stAbbrevs=[]
     for x in states.STATES:
