@@ -7,7 +7,6 @@ streamlit
 plotly
 matplotlib
 us
-json
 pygris
 numpy
 shapely
