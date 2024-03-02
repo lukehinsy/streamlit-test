@@ -43,8 +43,8 @@ def mapping_demo():
                                       county_fips = "*",
                                       year = 2020)
         df=pd.concat([df, pd.DataFrame(results)])
-    df.rename(columns = {'B25077_001E': 'MedianHHValue','B01003_001E':'TotalPop'}, inplace=True)
     df['poverty_rate'] = (df.C17002_002E + df.C17002_003E) / df.B01003_001E
+    df.rename(columns = {'B25077_001E': 'MedianHHValue','B01003_001E':'TotalPop'}, inplace=True)
     df.drop(['C17002_001E','C17002_002E','C17002_003E'], axis=1, inplace=True)
 
 
