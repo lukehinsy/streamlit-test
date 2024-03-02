@@ -31,7 +31,7 @@ from streamlit.hello.utils import show_code
 
 def mapping_demo():
 
-    c = Census(userdata.get('CensusAPIKey'))
+    c = Census(st.secrets['CensusAPIKey'])
     stAbbrevs=[]
     for x in states.STATES:
         stAbbrevs.append(x.abbr)
