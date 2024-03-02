@@ -47,9 +47,6 @@ def mapping_demo():
     df.rename(columns = {'B25077_001E': 'MedianHHValue','B01003_001E':'TotalPop'}, inplace=True)
     df.drop(['C17002_001E','C17002_002E','C17002_003E'], axis=1, inplace=True)
 
-
-    pygris.counties(state = StateAbb , cb = True, cache = True)
-
     geom_df=pd.DataFrame(columns=('GEOID','NAME','NAMELSAD','STUSPS','geometry'))
 
     for x in states.STATES:
