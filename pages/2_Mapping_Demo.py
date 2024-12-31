@@ -14,130 +14,93 @@
 
 from urllib.error import URLError
 
-import pandas as pd
-import pydeck as pdk
-# import geopandas as gpd
-import pandas as pd
-from census import Census
-from us import states
-import os
-import plotly.express as px
 import json
-import pygris
+import requests
+import pandas as pd
+from numpy import linalg
+import matplotlib.pyplot as plt
+import matplotlib
+import shapely
+
+import geopandas as gpd
+import folium
+import contextily
+from folium.plugins import HeatMap
 
 import streamlit as st
 from streamlit.hello.utils import show_code
 
+def get_businesses(location, term, api_key):
+  """
+  Uses YelpAPI to pull up to 1000 businesses, Lat/Lon, Avg Rating, and   
+    Number of Ratings (plus distance, but we aren't using that).  
 
-def mapping_demo():
+  """
+    headers = {'Authorization': 'Bearer %s' % api_key}
+    url = 'https://api.yelp.com/v3/businesses/search'
 
-    c = Census(st.secrets['CensusAPIKey'])
-    stAbbrevs=[]
-    for x in states.STATES:
-        stAbbrevs.append(x.abbr)
-    
-    df = pd.DataFrame(columns=('NAME',	'C17002_001E',	'C17002_002E',	'C17002_003E',	'B01003_001E','B25077_001E', 'B25097_001E',	'state',	'county'))
-    for x in states.STATES:
-        results = c.acs5.state_county(fields = ('NAME', 'C17002_001E', 'C17002_002E', 'C17002_003E', 'B01003_001E','B25077_001E', 'B25097_001E'),
-                                      state_fips = x.fips,
-                                      county_fips = "*",
-                                      year = 2020)
-        df=pd.concat([df, pd.DataFrame(results)])
-    df['poverty_rate'] = (df.C17002_002E + df.C17002_003E) / df.B01003_001E
-    df.rename(columns = {'B25077_001E': 'MedianHHValue','B01003_001E':'TotalPop'}, inplace=True)
-    df.drop(['C17002_001E','C17002_002E','C17002_003E'], axis=1, inplace=True)
+    data = [] 
+    for offset in range(0, 1000, 50):
+        params = {
+            'limit': 50, 
+            'location': location.replace(' ', '+'),
+            'term': term.replace(' ', '+'),
+            'offset': offset
+        }
 
-    geom_df=pd.DataFrame(columns=('GEOID','NAME','NAMELSAD','STUSPS','geometry'))
+        response = requests.get(url, headers=headers, params=params)
+        if response.status_code == 200:
+            data += response.json()['businesses']
+        elif response.status_code == 400:
+            print('400 Bad Request')
+            break
 
-    for x in states.STATES:
-        tractmaps = pygris.counties(state = x.fips, cb = True, cache = True)
-        geom_df=pd.concat([geom_df, tractmaps[['GEOID','NAME','NAMELSAD','STUSPS','geometry']]])
+    result_df = pd.DataFrame({'Name': [], 'Lat': [], 'Lon':[], 'Rating':[], 'RatingCount':[], 'Distance':[]})
+    listdic = []
+    for result in data:
+      name = result['name']
+      lat = result['coordinates']['latitude']
+      lon = result['coordinates']['longitude']
+      rating = result['rating']
+      ratingcount = result['review_count']
+      distance = result['distance']
+      listdic=pd.Series([name,lat,lon,rating,ratingcount,distance], index=['Name', 'Lat','Lon', 'Rating', 'RatingCount', 'Distance'])
+      result_df=pd.concat([result_df, listdic.to_frame().T], ignore_index=True)
 
-    geom_json = json.loads(geom_df.rename(columns={"GEOID": "fips"}).to_json())
-    df['fips']=df.state+df.county
-    fig = px.choropleth(df[['fips','NAME','MedianHHValue']], geojson=geom_json, locations='fips', color='MedianHHValue',
-                           color_continuous_scale="Viridis",
-                           range_color=(0, 400000),
-                           scope="usa",
-                           featureidkey = 'properties.fips',
-                           hover_data = ['NAME','MedianHHValue'],
-                           labels={'NAME':'County','MedianHHValue':'median HH value'}
-                          )
-    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-    fig.update_traces(marker_line_width=0, marker_line_color='rgba(0,0,0,0)')
-    fig.show()
+    return result_df
 
-    # try:
-    #     ALL_LAYERS = {
-    #         "Bike Rentals": pdk.Layer(
-    #             "HexagonLayer",
-    #             data=from_data_file("bike_rental_stats.json"),
-    #             get_position=["lon", "lat"],
-    #             radius=200,
-    #             elevation_scale=4,
-    #             elevation_range=[0, 1000],
-    #             extruded=True,
-    #         ),
-    #         "Bart Stop Exits": pdk.Layer(
-    #             "ScatterplotLayer",
-    #             data=from_data_file("bart_stop_stats.json"),
-    #             get_position=["lon", "lat"],
-    #             get_color=[200, 30, 0, 160],
-    #             get_radius="[exits]",
-    #             radius_scale=0.05,
-    #         ),
-    #         "Bart Stop Names": pdk.Layer(
-    #             "TextLayer",
-    #             data=from_data_file("bart_stop_stats.json"),
-    #             get_position=["lon", "lat"],
-    #             get_text="name",
-    #             get_color=[0, 0, 0, 200],
-    #             get_size=10,
-    #             get_alignment_baseline="'bottom'",
-    #         ),
-    #         "Outbound Flow": pdk.Layer(
-    #             "ArcLayer",
-    #             data=from_data_file("bart_path_stats.json"),
-    #             get_source_position=["lon", "lat"],
-    #             get_target_position=["lon2", "lat2"],
-    #             get_source_color=[200, 30, 0, 160],
-    #             get_target_color=[200, 30, 0, 160],
-    #             auto_highlight=True,
-    #             width_scale=0.0001,
-    #             get_width="outbound",
-    #             width_min_pixels=3,
-    #             width_max_pixels=30,
-    #         ),
-    #     }
-    #     st.sidebar.markdown("### Map Layers")
-    #     selected_layers = [
-    #         layer
-    #         for layer_name, layer in ALL_LAYERS.items()
-    #         if st.sidebar.checkbox(layer_name, True)
-    #     ]
-    #     if selected_layers:
-    #         st.pydeck_chart(
-    #             pdk.Deck(
-    #                 map_style=None,
-    #                 initial_view_state={
-    #                     "latitude": 37.76,
-    #                     "longitude": -122.4,
-    #                     "zoom": 11,
-    #                     "pitch": 50,
-    #                 },
-    #                 layers=selected_layers,
-    #             )
-    #         )
-    #     else:
-    #         st.error("Please choose at least one layer above.")
-    # except URLError as e:
-    #     st.error(
-    #         """
-    #         **This demo requires internet access.**
-    #         Connection error: %s
-    #     """
-    #         % e.reason
-    #     )
+
+def MapYelps(df):
+  #Set figure size, then add map to that
+  f = folium.Figure(width=800, height=400)
+  m=folium.Map(tiles='CartoDB positron', control=False).add_to(f) 
+  
+  #Pull top left, bottom right corners and set map bound box. 
+  sw = [df.Lat.min(), df.Lon.min()]
+  ne = [df.Lat.max(), df.Lon.max()]
+  m.fit_bounds([sw,ne])
+
+  #Create a layer, add points to it, then add the layer to your map
+  Locations = folium.FeatureGroup(name = "Locations")
+  for index, row in df.iterrows():
+    html = '''
+    <b>Name:</b> {name} <br>
+    <b>Rating:</b> {rating}
+    '''.format(name = row.Name, rating=row.Rating)
+
+    iframe = folium.IFrame(html)
+    popup = folium.Popup(iframe,
+                        min_width=200,
+                        max_width=120)
+
+    Locations.add_child(folium.Marker(location=[row.Lat,row.Lon], popup = popup))
+  m.add_child(Locations)
+  
+  #Add ability to turn off/on your layers
+  folium.LayerControl().add_to(m)
+  
+  return(m)
+
 
 
 st.set_page_config(page_title="Mapping Demo", page_icon="🌍")
@@ -149,6 +112,6 @@ st.write(
 to display geospatial data."""
 )
 
-mapping_demo()
+test = get_businesses('columbus, ohio', 'mexican', st.secrets["YelpAPIKey"])
 
-show_code(mapping_demo)
+MapYelps(test)

@@ -13,4 +13,9 @@ shapely
 fiona
 six
 pyproj
+contextily
 geopandas
+geojson
+folium
+h3
+YelpAPI
