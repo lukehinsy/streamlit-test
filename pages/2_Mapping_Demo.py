@@ -31,11 +31,11 @@ import streamlit as st
 from streamlit.hello.utils import show_code
 
 def get_businesses(location, term, api_key):
-  """
-  Uses YelpAPI to pull up to 1000 businesses, Lat/Lon, Avg Rating, and   
+    """
+    Uses YelpAPI to pull up to 1000 businesses, Lat/Lon, Avg Rating, and   
     Number of Ratings (plus distance, but we aren't using that).  
 
-  """
+    """
     headers = {'Authorization': 'Bearer %s' % api_key}
     url = 'https://api.yelp.com/v3/businesses/search'
 
@@ -58,14 +58,14 @@ def get_businesses(location, term, api_key):
     result_df = pd.DataFrame({'Name': [], 'Lat': [], 'Lon':[], 'Rating':[], 'RatingCount':[], 'Distance':[]})
     listdic = []
     for result in data:
-      name = result['name']
-      lat = result['coordinates']['latitude']
-      lon = result['coordinates']['longitude']
-      rating = result['rating']
-      ratingcount = result['review_count']
-      distance = result['distance']
-      listdic=pd.Series([name,lat,lon,rating,ratingcount,distance], index=['Name', 'Lat','Lon', 'Rating', 'RatingCount', 'Distance'])
-      result_df=pd.concat([result_df, listdic.to_frame().T], ignore_index=True)
+        name = result['name']
+        lat = result['coordinates']['latitude']
+        lon = result['coordinates']['longitude']
+        rating = result['rating']
+        ratingcount = result['review_count']
+        distance = result['distance']
+        listdic=pd.Series([name,lat,lon,rating,ratingcount,distance], index=['Name', 'Lat','Lon', 'Rating', 'RatingCount', 'Distance'])
+        result_df=pd.concat([result_df, listdic.to_frame().T], ignore_index=True)
 
     return result_df
 
