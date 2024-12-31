@@ -109,7 +109,7 @@ st.sidebar.header("Mapping Demo")
 st.write(
     """This demo shows how to use
 [`st.pydeck_chart`](https://docs.streamlit.io/library/api-reference/charts/st.pydeck_chart)
-to display geospatial data."""
+to display geospatial data. It should now show an updated YELP map"""
 )
 
 test = get_businesses('columbus, ohio', 'mexican', st.secrets["YelpAPIKey"])
