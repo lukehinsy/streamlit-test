@@ -19,4 +19,5 @@ geojson
 folium
 h3
 YelpAPI
+streamlit_folium
 
