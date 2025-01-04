@@ -114,5 +114,6 @@ to display geospatial data. It should now show an updated YELP map"""
 )
 
 test = get_businesses('columbus, ohio', 'mexican', st.secrets["YelpAPIKey"])
+# test = get_businesses('columbus, ohio', 'mexican', $YELPAPIKEY)
 
 MapYelps(test)
