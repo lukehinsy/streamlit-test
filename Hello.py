@@ -28,7 +28,6 @@ def run():
 
     st.sidebar.success("Select a demo above.")
     st.write("testing ")
-    st.write(st.secrets['test'])
 
     st.markdown(
         """
