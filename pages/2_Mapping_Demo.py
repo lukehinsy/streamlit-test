@@ -27,6 +27,7 @@ import geopandas as gpd
 import folium
 import contextily
 from folium.plugins import HeatMap
+from streamlit_folium import st_folium
 
 import streamlit as st
 from streamlit.hello.utils import show_code
@@ -100,7 +101,7 @@ def MapYelps(df):
   #Add ability to turn off/on your layers
   folium.LayerControl().add_to(m)
   
-  return(m)
+  return(st_folium(m, width=700, height=450))
 
 
 
@@ -113,6 +114,12 @@ st.write(
 to display geospatial data. It should now show an updated YELP map"""
 )
 
-test = get_businesses('columbus, ohio', 'mexican', st.secrets["YelpAPIKey"])
+Geog = st.text_input("Search Geography", "Columbus, Ohio")
+Query = st.text_input("Search Query", "barbecue")
+
+test = get_businesses(Geog, Query, st.secrets["YelpAPIKey"])
 
 MapYelps(test)
+
+st.write('test complete')
+
