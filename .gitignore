@@ -1,2 +1,6 @@
 .streamlit/
 .streamlit/secrets.toml
+/workspaces/streamlit-test/files/*
+files/*
+/files/*
+.streamlit/files/*
