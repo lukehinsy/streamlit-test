@@ -36,6 +36,7 @@ from shapely.geometry import shape
 
 import streamlit as st
 from streamlit.hello.utils import show_code
+from streamlit_folium import folium_static
 
 def get_businesses(location, term, api_key):
     """
@@ -204,77 +205,84 @@ def MapYelps_allinone(df, markers = True, HexHeat = 'Hex', res = 8, zoom = 9, fi
   zoom is the starting zoom level *if* you are not using markers = True. If using markers = True, then it will use a boundary box based on marker locations. 
   fillGeom: When HexHeat=Hex, this determines whether you fill an outer polygon with ALL polygons. Use 5-digit state+county FIPS code or 2-digit state code. 
   """  
-  f = folium.Figure(width=800, height=400)
+  if 'map' not in st.session_state or st.session_state.map is None:
+    f = folium.Figure(width=800, height=400)
 
-  if (markers==True):
-    m=folium.Map(tiles='CartoDB positron', control=False).add_to(f)
-    sw = [df.Lat.min(), df.Lon.min()]
-    ne = [df.Lat.max(), df.Lon.max()]
-    m.fit_bounds([sw,ne])
-    Locations = folium.FeatureGroup(name = "Locations")
+    if (markers==True):
+      m=folium.Map(tiles='CartoDB positron', control=False).add_to(f)
+      sw = [df.Lat.min(), df.Lon.min()]
+      ne = [df.Lat.max(), df.Lon.max()]
+      m.fit_bounds([sw,ne])
+      Locations = folium.FeatureGroup(name = "Locations")
 
-    for index, row in df.iterrows():
-      html = '''
-      <b>Name:</b> {name} <br>
-      <b>Rating:</b> {rating}
-      '''.format(name = row.Name, rating=row.Rating)
+      for index, row in df.iterrows():
+        html = '''
+        <b>Name:</b> {name} <br>
+        <b>Rating:</b> {rating}
+        '''.format(name = row.Name, rating=row.Rating)
 
-      iframe = folium.IFrame(html)
-      popup = folium.Popup(iframe,
-                          min_width=200,
-                          max_width=120)
+        iframe = folium.IFrame(html)
+        popup = folium.Popup(iframe,
+                            min_width=200,
+                            max_width=120)
 
-      Locations.add_child(folium.Marker(location=[row.Lat,row.Lon], popup = popup))
-    m.add_child(Locations)
-  if (markers!=True):
-    m=folium.Map(tiles='CartoDB positron', control=False, location = [df.Lat.mean(),df.Lon.mean()], zoom_start=zoom).add_to(f)
-  if (HexHeat == 'Heat'):
-    points=df[['Lat','Lon']].values.tolist()
-    HeatMap(points, name="Heatmap").add_to(m)
+        Locations.add_child(folium.Marker(location=[row.Lat,row.Lon], popup = popup))
+      m.add_child(Locations)
+    if (markers!=True):
+      m=folium.Map(tiles='CartoDB positron', control=False, location = [df.Lat.mean(),df.Lon.mean()], zoom_start=zoom).add_to(f)
+    if (HexHeat == 'Heat'):
+      points=df[['Lat','Lon']].values.tolist()
+      HeatMap(points, name="Heatmap").add_to(m)
 
-  if (HexHeat == 'Hex'):
-    hexed = Hexify(df, resolution = res)
-    df_aggreg=hexed.groupby(['hex_id']).size().reset_index(name='counts')
-    if (fillGeom==False):
-      choropleth_map(df_aggreg, 'counts', zoom=zoom, initial_map=m)
-    if (fillGeom!=False):
-      if fillGeom==True:
-        fillGeom='39049'
-      if len(fillGeom)==5:
-        fillpoly=poly_geojson(usa.geometry[usa.GEOID==fillGeom])
-      elif len(fillGeom)==2:
-        fillpoly=poly_geojson(usa.geometry[usa.STATEFP==fillGeom].unary_union)
-      fillhexes=h3.polyfill_geojson(fillpoly,res)
-      h3_df = pd.DataFrame([],columns=['h3_id','h3_geo_boundary'])
-      for h3_hex in fillhexes:
-        h3_geo_boundary = shapely.geometry.Polygon(
-            h3.h3_to_geo_boundary(h3_hex,geo_json=True)
-        )
-        h3_df.loc[len(h3_df)]=[
-                      h3_hex,
-                      h3_geo_boundary
-                  ]
-      geoms = [shape(i) for i in h3_df.h3_geo_boundary]
-      fillgpd = gpd.GeoDataFrame({'hex_id':h3_df.h3_id,'geometry':geoms})
-      fillgpd.crs='EPSG:4269'
+    if (HexHeat == 'Hex'):
+      hexed = Hexify(df, resolution = res)
+      df_aggreg=hexed.groupby(['hex_id']).size().reset_index(name='counts')
+      if (fillGeom==False):
+        choropleth_map(df_aggreg, 'counts', zoom=zoom, initial_map=m)
+      if (fillGeom!=False):
+        if fillGeom==True:
+          fillGeom='39049'
+        if len(fillGeom)==5:
+          fillpoly=poly_geojson(usa.geometry[usa.GEOID==fillGeom])
+        elif len(fillGeom)==2:
+          fillpoly=poly_geojson(usa.geometry[usa.STATEFP==fillGeom].unary_union)
+        fillhexes=h3.polyfill_geojson(fillpoly,res)
+        h3_df = pd.DataFrame([],columns=['h3_id','h3_geo_boundary'])
+        for h3_hex in fillhexes:
+          h3_geo_boundary = shapely.geometry.Polygon(
+              h3.h3_to_geo_boundary(h3_hex,geo_json=True)
+          )
+          h3_df.loc[len(h3_df)]=[
+                        h3_hex,
+                        h3_geo_boundary
+                    ]
+        geoms = [shape(i) for i in h3_df.h3_geo_boundary]
+        fillgpd = gpd.GeoDataFrame({'hex_id':h3_df.h3_id,'geometry':geoms})
+        fillgpd.crs='EPSG:4269'
 
-      folium.Choropleth(
-          geo_data=fillgpd,
-          name="choropleth",
-          data=df_aggreg,
-          columns=["hex_id", "counts"],
-          key_on="feature.properties.hex_id",
-          fill_color="Blues",
-          fill_opacity=0.7,
-          line_opacity=0.02,
-          legend_name="Restaurant Counts",
-          nan_fill_opacity = .05
-      ).add_to(m)
+        folium.Choropleth(
+            geo_data=fillgpd,
+            name="choropleth",
+            data=df_aggreg,
+            columns=["hex_id", "counts"],
+            key_on="feature.properties.hex_id",
+            fill_color="Blues",
+            fill_opacity=0.7,
+            line_opacity=0.02,
+            legend_name="Restaurant Counts",
+            nan_fill_opacity = .05
+        ).add_to(m)
 
 
-  folium.LayerControl().add_to(m)
+    folium.LayerControl().add_to(m)
 
-  return(st_folium(m, width=700, height=450))
+    st.session_state.map = st_folium(m, width=700, height=450)
+  
+  return(st.session_state.map)
+
+def show_map(df, markers = True, HexHeat = 'Hex', res = 8, zoom = 9, fillGeom=False):
+    m = MapYelps_allinone(df, markers, HexHeat, res, zoom, fillGeom)  # Get or create the map
+    folium_static(m)
 
 st.set_page_config(page_title="Mapping Demo", page_icon="🌍")
 st.markdown("# Mapping Demo")
@@ -292,7 +300,6 @@ test = get_businesses(Geog, Query, st.secrets["YelpAPIKey"])
 st.write(test)
 
 # MapYelps(test)
-MapYelps_allinone(test, markers = True, HexHeat = 'Hex', fillGeom=True, res = 7, zoom = 9)
-
+show_map(test, markers = False, HexHeat = 'Hex', fillGeom=True, res = 7, zoom = 9)
 st.write('test complete')
 
