@@ -276,13 +276,14 @@ def MapYelps_allinone(df, markers = True, HexHeat = 'Hex', res = 8, zoom = 9, fi
 
     folium.LayerControl().add_to(m)
 
-    st.session_state.map = st_folium(m, width=700, height=450)
+    st.session_state.map = m
   
   return(st.session_state.map)
 
 def show_map(df, markers = True, HexHeat = 'Hex', res = 8, zoom = 9, fillGeom=False):
     m = MapYelps_allinone(df, markers, HexHeat, res, zoom, fillGeom)  # Get or create the map
-    st_folium(m)
+    st_folium(m, width=700, height=450)
+    
 
 st.set_page_config(page_title="Mapping Demo", page_icon="🌍")
 st.markdown("# Mapping Demo")
