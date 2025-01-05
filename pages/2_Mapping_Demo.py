@@ -282,7 +282,7 @@ def MapYelps_allinone(df, markers = True, HexHeat = 'Hex', res = 8, zoom = 9, fi
 
 def show_map(df, markers = True, HexHeat = 'Hex', res = 8, zoom = 9, fillGeom=False):
     m = MapYelps_allinone(df, markers, HexHeat, res, zoom, fillGeom)  # Get or create the map
-    folium_static(m)
+    st_folium(m)
 
 st.set_page_config(page_title="Mapping Demo", page_icon="🌍")
 st.markdown("# Mapping Demo")
